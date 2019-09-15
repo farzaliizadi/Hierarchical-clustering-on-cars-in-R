@@ -1,0 +1,59 @@
+setwd( "D:/Documents/cars")
+getwd()
+library(ggplot2)
+library(xlsx)
+library(readxl)
+d <-head(mtcars)
+names(d)
+head(d)
+str(d)
+row.names(d)
+plot(d[,'wt'], d[,'mpg'],
+     main="Milage vs. Car Weight\n~~~~~~~~~~~~~~~~~~~",
+     xlab="Weight", ylab="Miles/(US) gallon",
+     pch=19, col="darkgreen")
+text(d[,'wt'], d[,'mpg'],  row.names(d),
+     cex=0.65, pos=3,col="red")
+
+# Normalize
+z = d[,-c(1)]
+means = apply(z,2,mean)
+sds = apply(z,2,sd)
+nor = scale(z,center=means,scale=sds)
+str(nor)
+##calculate distance matrix (default is Euclidean distance)
+#Each row is a vector with columns components. 
+#Valiant = ("mpg","cyl","disp","hp","drat","wt","qsec","vs","am","gear","carb") 
+#And nor takes place in R^11.
+distance = dist(nor)
+distance
+print(distance, digits=3)
+# Hierarchical agglomerative clustering using default complete linkage
+hc.c = hclust(distance)    # c= complete linkage
+plot(hc.c)
+plot(hc.c,labels=row.names(d),main='Default from hclust')
+plot(hc.c,hang=-1)
+plot(hc.c,hang=-1, row.names(d))
+# Cluster membership in 3 cluters which one belong , 2, 3
+member.c = cutree(hc.c,3)
+table(member.c)
+#Cluter Dendrogram with  average=a Linkage 
+hc.a <- hclust(distance, method = 'average')
+plot(hc.a, hang=-1)
+#Cluster Membership diagonals belong in both 1, or both 2 ot both 3
+#otherwise M12 belong in a1 and c2
+member.c <- cutree(hc.c,3)
+member.a <- cutree(hc.a,3)
+table(member.c, member.a)
+# Cluster means
+z = d[,-c(1)]
+means = apply(z,2,mean)
+sds = apply(z,2,sd)
+nor = scale(z,center=means,scale=sds)
+aggregate(nor, list(member.c), mean)
+aggregate(nor, list(member.a), mean)
+# in ror 1 meaning cluster one drat=0.9136629 bigger than all numbers so
+#it drat has much impact on cluster 1 but  row 3 drat=-.8805592 minus 
+#impact on cluster 3.
+# Cluster means in original data
+aggregate(d[-c(1)], list(member.c), mean)
